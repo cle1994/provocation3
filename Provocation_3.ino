@@ -5,7 +5,8 @@ void setup()
 {
    Serial.begin(9600);
 }
- 
+
+double lastReading; 
  
 void loop() 
 {
@@ -32,8 +33,8 @@ void loop()
    }
    peakToPeak = signalMax - signalMin;  // max - min = peak-peak amplitude
    double volts = (peakToPeak * 3.3) / 1024;  // convert to volts
- 
-   if (volts > 1.5)
+   
+   if (lastReading > 1.5 && volts < 0.75)
    {
      Serial.println("===================");
      Serial.println("   Threshold met   ");
@@ -42,4 +43,6 @@ void loop()
      Serial.println("===================");
      delay(2000);
    }
+   
+   lastReading = volts;
 }
