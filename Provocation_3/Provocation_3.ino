@@ -47,6 +47,7 @@ void loop()
    double volts = (peakToPeak * 3.3) / 1024;  // convert to volts
    
    if (lastReading > 1.5 && volts < 0.75) {
+     // things just got quiet
      Serial.println("===================");
      Serial.println("   Threshold met   ");
      Serial.println("-------------------");
@@ -55,8 +56,10 @@ void loop()
      soundCtrl.asyncPlayVoice(0);
      delay(4000);
    } else if (lastReading < 0.75 && volts > 1.5) {
+     // things just got loud
      loudStart = millis();
    } else if (lastReading > 1.5 && (millis() - loudStart > loudThreshold)) {
+     // things have been loud for a while
      Serial.println("===================");
      Serial.println("   Threshold met   ");
      Serial.println("-------------------");
