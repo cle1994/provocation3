@@ -1,4 +1,5 @@
 #include <Wtv020sd16p.h>
+#include <Servo.h> 
 
 #define RESET_PIN  2
 #define CLOCK_PIN  3
@@ -8,18 +9,23 @@
 const int sampleWindow = 500; // Sample window width in mS (50 mS = 20Hz)
 const int loudThreshold = 4000;
 unsigned int sample;
+int lastPlayed = 0;
 
 Wtv020sd16p soundCtrl(RESET_PIN, CLOCK_PIN, DATA_PIN, BUSY_PIN);
+Servo myservo;
+int pos = 0; // servo position
  
 void setup() 
 {
    Serial.begin(9600);
    soundCtrl.reset();
+   myservo.attach(9); // servo goes in pin 9
+   myservo.write(pos);
 }
 
 double lastReading;
 unsigned long loudStart;
- 
+
 void loop() 
 {
    unsigned long startMillis= millis();  // Start of sample window
@@ -46,28 +52,53 @@ void loop()
    peakToPeak = signalMax - signalMin;  // max - min = peak-peak amplitude
    double volts = (peakToPeak * 3.3) / 1024;  // convert to volts
    
-   if (lastReading > 1.5 && volts < 0.75) {
+   if (volts < 0.75 && lastPlayed == 1) {
      // things just got quiet
-     Serial.println("===================");
-     Serial.println("   Threshold met   ");
-     Serial.println("-------------------");
-     Serial.println(volts);
-     Serial.println("===================");
-     soundCtrl.asyncPlayVoice(0);
-     delay(4000);
+     Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+     Serial.println("   things just got quiet   ");
+     Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
+     Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+     go_to(0);
+     play(0);
    } else if (lastReading < 0.75 && volts > 1.5) {
-     // things just got loud
+     Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+     Serial.println("   things just got loud   ");
+     Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
+     Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
      loudStart = millis();
-   } else if (lastReading > 1.5 && (millis() - loudStart > loudThreshold)) {
+   } else if (volts > 1.5 && (millis() - loudStart > loudThreshold)
+              && lastPlayed == 0) {
      // things have been loud for a while
-     Serial.println("===================");
-     Serial.println("   Threshold met   ");
-     Serial.println("-------------------");
-     Serial.println(volts);
-     Serial.println("===================");
-     soundCtrl.asyncPlayVoice(1);
-     delay(4000);
+     Serial.println("=======================================");
+     Serial.println("   things have been loud for a while   ");
+     Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
+     Serial.println("=======================================");
+     go_to(180);
+     play(1);
    }
    
+   Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
    lastReading = volts;
+}
+
+void play(int trackNumber) {
+  soundCtrl.asyncPlayVoice(trackNumber);
+  lastPlayed = trackNumber;
+  delay(4000);
+}
+
+void go_to(int new_pos) {
+  if (pos == new_pos) {
+     return;
+   }
+   int incr = 0;
+   if (pos < new_pos) {
+     incr = 1;
+   } else {
+     incr = -1;
+   }
+   for (pos = pos; pos != new_pos; pos = pos + incr) {
+     myservo.write(pos);
+     delay(15); 
+   }
 }
