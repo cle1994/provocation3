@@ -37,7 +37,6 @@ void loop()
    unsigned int signalMin = 1024;
    
    float fsr = analogRead(FSR_PIN);
-   Serial.println(fsr);
  
    while (millis() - startMillis < sampleWindow)
    {
@@ -82,7 +81,9 @@ void loop()
      play(1);
    }
    
-   Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
+   Serial.print("prev V: "); Serial.print(lastReading);
+   Serial.print(", curr V: "); Serial.print(volts);
+   Serial.print(", fsr: "); Serial.println(fsr);
    lastReading = volts;
 }
 
