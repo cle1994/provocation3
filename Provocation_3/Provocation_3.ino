@@ -6,6 +6,8 @@
 #define DATA_PIN  4
 #define BUSY_PIN  5
 
+#define FSR_PIN 15
+
 const int sampleWindow = 500; // Sample window width in mS (50 mS = 20Hz)
 const int loudThreshold = 4000;
 unsigned int sample;
@@ -33,6 +35,9 @@ void loop()
  
    unsigned int signalMax = 0;
    unsigned int signalMin = 1024;
+   
+   float fsr = analogRead(FSR_PIN);
+   Serial.println(fsr);
  
    while (millis() - startMillis < sampleWindow)
    {
