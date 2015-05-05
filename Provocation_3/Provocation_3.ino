@@ -56,7 +56,7 @@ void loop()
    peakToPeak = signalMax - signalMin;  // max - min = peak-peak amplitude
    double volts = (peakToPeak * 3.3) / 1024;  // convert to volts
    
-   if (volts < 0.75 && lastPlayed == 1 && fsr > 0) {
+   if (volts < 0.75 && lastPlayed == 1 && fsr > 50) {
      // things just got quiet
      Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
      Serial.println("   things just got quiet & i'm being pet   ");
@@ -70,7 +70,7 @@ void loop()
      Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
      Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
      loudStart = millis();
-   } else if (volts > 1.5 && (millis() - loudStart > loudThreshold)
+   } else if (volts > 1.4 && (millis() - loudStart > loudThreshold)
               && lastPlayed == 0) {
      // things have been loud for a while
      Serial.println("=======================================");
