@@ -88,9 +88,15 @@ void loop()
    lastReading = volts;
 }
 
-void play(int trackNumber) {
-  soundCtrl.asyncPlayVoice(trackNumber);
-  lastPlayed = trackNumber;
+void play(int type) {
+  int track = 0;
+  if (type == 0) {        // play a happy sound
+    track = random(0, 3); // tracks 0, 1, and 2 are happy
+  } else if (type == 1) { // play a sad sound
+    track = random(3, 6); // tracks 3, 4, and 5 are sad
+  }
+  soundCtrl.asyncPlayVoice(track);
+  lastPlayed = type;
   delay(4000);
 }
 
