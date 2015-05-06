@@ -9,7 +9,7 @@
 #define FSR_PIN 15
 
 const int sampleWindow = 500; // Sample window width in mS (50 mS = 20Hz)
-const int loudThreshold = 4000;
+const int loudThreshold = 3000;
 unsigned int sample;
 int lastPlayed = 0;
 
@@ -23,6 +23,7 @@ void setup()
    soundCtrl.reset();
    myservo.attach(9); // servo goes in pin 9
    myservo.write(pos);
+   go_to(180);
 }
 
 double lastReading;
@@ -56,28 +57,28 @@ void loop()
    peakToPeak = signalMax - signalMin;  // max - min = peak-peak amplitude
    double volts = (peakToPeak * 3.3) / 1024;  // convert to volts
    
-   if (volts < 0.75 && lastPlayed == 1 && fsr > 50) {
+   if (volts < 2.9 && lastPlayed == 1 && fsr > 50) {
      // things just got quiet
      Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
      Serial.println("   things just got quiet & i'm being pet   ");
      Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
      Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-     go_to(0);
+     go_to(180);
      play(0);
-   } else if (lastReading < 0.75 && volts > 1.5) {
+   } else if (lastReading < 2.9 && volts > 3.0) {
      Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
      Serial.println("   things just got loud   ");
      Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
      Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
      loudStart = millis();
-   } else if (volts > 1.4 && (millis() - loudStart > loudThreshold)
+   } else if (volts > 2.9 && (millis() - loudStart > loudThreshold)
               && lastPlayed == 0) {
      // things have been loud for a while
      Serial.println("=======================================");
      Serial.println("   things have been loud for a while   ");
      Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
      Serial.println("=======================================");
-     go_to(180);
+     go_to(0);
      play(1);
    }
    
