@@ -42,7 +42,8 @@ void loop()
    while (millis() - startMillis < sampleWindow)
    {
       sample = analogRead(0);
-      if (sample < 1024)  // toss out spurious readings
+      //Serial.println(sample);
+      if (sample < 900)  // toss out spurious readings
       {
          if (sample > signalMax)
          {
@@ -57,7 +58,7 @@ void loop()
    peakToPeak = signalMax - signalMin;  // max - min = peak-peak amplitude
    double volts = (peakToPeak * 3.3) / 1024;  // convert to volts
    
-   if (volts < 2.9 && lastPlayed == 1 && fsr > 50) {
+   if (volts < 2.0 && lastPlayed == 1 && fsr > 50) {
      // things just got quiet
      Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
      Serial.println("   things just got quiet & i'm being pet   ");
@@ -65,13 +66,13 @@ void loop()
      Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
      go_to(180);
      play(0);
-   } else if (lastReading < 2.9 && volts > 3.0) {
+   } else if (lastReading < 2.0 && volts > 3.0) {
      Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
      Serial.println("   things just got loud   ");
      Serial.print(lastReading); Serial.print(", "); Serial.println(volts);
      Serial.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
      loudStart = millis();
-   } else if (volts > 2.9 && (millis() - loudStart > loudThreshold)
+   } else if (volts > 2.0 && (millis() - loudStart > loudThreshold)
               && lastPlayed == 0) {
      // things have been loud for a while
      Serial.println("=======================================");
