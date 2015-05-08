@@ -96,6 +96,7 @@ void play(int type) {
   } else if (type == 1) { // play a sad sound
     track = random(3, 6); // tracks 3, 4, and 5 are sad
   }
+  Serial.print("Playing track number: ");Serial.println(track);
   soundCtrl.asyncPlayVoice(track);
   lastPlayed = type;
   delay(4000);
