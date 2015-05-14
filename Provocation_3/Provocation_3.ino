@@ -11,8 +11,8 @@
 
 #define N 15
 
-float loud_voltage = 2.9;
-float quiet_voltage = 2.5;
+float loud_voltage = 3.0;
+float quiet_voltage = 2.9;
 bool is_happy = true; // flag for whether buddy is currently happy or sad
 unsigned long started_happy_at_time = 0; // record millis() when it started being happy
 unsigned long be_happy_for_at_least = 10000; // can't go to sad state until at least this
