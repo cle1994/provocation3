@@ -15,7 +15,7 @@ float loud_voltage = 3.0;
 float quiet_voltage = 2.9;
 bool is_happy = true; // flag for whether buddy is currently happy or sad
 unsigned long started_happy_at_time = 0; // record millis() when it started being happy
-unsigned long be_happy_for_at_least = 10000; // can't go to sad state until at least this
+unsigned long be_happy_for_at_least = 5000; // can't go to sad state until at least this
                                   // much time has been spent in happy state
 
 // for calculating voltage
@@ -77,18 +77,18 @@ void loop() {
 }
 
 // SOUND CONTROL ///////////////////////////////////////
-void play_happy_noises() {
-  play_track_number(random(0,3));
+void play_unhappy_noises() {
+  play_track_number(random(0,9));
 }
 
-void play_unhappy_noises() {
-  play_track_number(random(3,6));
+void play_happy_noises() {
+  play_track_number(random(9,15));
 }
 
 void play_track_number(int track) {
   Serial.print("Playing track number: ");Serial.println(track);
   soundCtrl.playVoice(track);
-  delay(5000);
+  delay(4000);
 }
 
 // VOLTAGE & TRAILING AVERAGE CALCULATIONS //////////////////////////
@@ -141,7 +141,7 @@ double calculate_voltage() {
 
 // SERVO CONTROL /////////////////////////////////
 void curl_up() {
-  go_to(0);
+  go_to(50);
 }
 void uncurl() {
   go_to(180); 
