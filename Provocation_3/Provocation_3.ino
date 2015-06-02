@@ -9,7 +9,7 @@
 #define FSR_PIN 15
 #define SERVO_PIN 9
 
-#define N 15
+#define N 15 // the number of previous loudness values to maintain
 
 float loud_voltage = 3.0;
 float quiet_voltage = 2.9;
