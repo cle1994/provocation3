@@ -1,18 +1,21 @@
 #include <Wtv020sd16p.h>
-#include <Servo.h> 
+#include <Servo.h>
+#include "CapacitiveSensor.h"
 
 #define RESET_PIN  2
 #define CLOCK_PIN  3
 #define DATA_PIN  4
 #define BUSY_PIN  5
 
-#define FSR_PIN 15
+#define CAPACITIVE_PIN_SENSOR 8
+#define CAPACITIVE_PIN_OTHER 6
+
 #define SERVO_PIN 9
 
-#define N 15 // the number of previous loudness values to maintain
+#define N 10 // the number of previous loudness values to maintain
 
-float loud_voltage = 3.0;
-float quiet_voltage = 2.9;
+float loud_voltage = 2.7;
+float quiet_voltage = 2.6;
 bool is_happy = true; // flag for whether buddy is currently happy or sad
 unsigned long started_happy_at_time = 0; // record millis() when it started being happy
 unsigned long be_happy_for_at_least = 5000; // can't go to sad state until at least this
@@ -26,6 +29,7 @@ double avg_volts = 0;
 double volts = 0;
 
 Wtv020sd16p soundCtrl(RESET_PIN, CLOCK_PIN, DATA_PIN, BUSY_PIN);
+CapacitiveSensor capacitive_sensor = CapacitiveSensor(6,8); // 10M resistor between pins 6 & 8, pin 8 is sensor pin, add a wire and or foil
 
 Servo myservo;
 int pos = 0; // servo position
@@ -44,11 +48,11 @@ void setup() {
 void loop() {
   volts = calculate_voltage();
   avg_volts = update_trailing_avg(volts);
-  float fsr = analogRead(FSR_PIN);
+  float capacitive = capacitive_sensor.capacitiveSensor(30);
   
   Serial.print("avg V: "); Serial.print(avg_volts);
   Serial.print(", curr V: "); Serial.print(volts);
-  Serial.print(", fsr: "); Serial.print(fsr);
+  Serial.print(", capacitive: "); Serial.print(capacitive);
   
   unsigned long current_time = millis();
   unsigned long time_elapsed = current_time - started_happy_at_time;
@@ -64,7 +68,7 @@ void loop() {
      curl_up();
      play_unhappy_noises();
      is_happy = false;
-  } else if (avg_volts < quiet_voltage && !is_happy && fsr > 50) {
+  } else if (avg_volts < quiet_voltage && !is_happy && capacitive > 2000) {
      Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
      Serial.println("   things just got quiet & i'm being pet :-)  ");
      Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -111,13 +115,11 @@ double update_trailing_avg(double v) {
 }
 
 double calculate_voltage() {
-     unsigned long startMillis= millis();  // Start of sample window
+   unsigned long startMillis= millis();  // Start of sample window
    unsigned int peakToPeak = 0;   // peak-to-peak level
  
    unsigned int signalMax = 0;
    unsigned int signalMin = 1024;
-   
-   float fsr = analogRead(FSR_PIN);
  
    while (millis() - startMillis < sampleWindow)
    {
