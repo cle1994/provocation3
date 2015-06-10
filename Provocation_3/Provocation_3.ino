@@ -12,7 +12,7 @@
 
 #define SERVO_PIN 9
 
-#define N 10 // the number of previous loudness values to maintain
+#define N 3 // the number of previous loudness values to maintain
 
 float loud_voltage = 2.7;
 float quiet_voltage = 2.6;
@@ -68,7 +68,8 @@ void loop() {
      curl_up();
      play_unhappy_noises();
      is_happy = false;
-  } else if (avg_volts < quiet_voltage && !is_happy && capacitive > 2000) {
+  } else if (avg_volts < quiet_voltage && !is_happy && capacitive > 1000) {
+  // } else if (avg_volts < quiet_voltage && !is_happy && capacitive > 2000) {
      Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
      Serial.println("   things just got quiet & i'm being pet :-)  ");
      Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -143,7 +144,7 @@ double calculate_voltage() {
 
 // SERVO CONTROL /////////////////////////////////
 void curl_up() {
-  go_to(50);
+  go_to(0);
 }
 void uncurl() {
   go_to(180); 
