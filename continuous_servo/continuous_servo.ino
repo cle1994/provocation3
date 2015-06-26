@@ -14,14 +14,13 @@ void setup()
 // it looks like at speed 100 for 500 ms it rotates about 90 degrees
 // it looks like 3000ms at speed 100 goes the full length of the arms
 void loop() {
-
   myservo.write(80);
-  delay(2500);
+  delay(2000);
   myservo.write(90);
   delay(5000);
 
   myservo.write(100);
-  delay(2500);
+  delay(2000);
   myservo.write(90);
   delay(5000);
 }
