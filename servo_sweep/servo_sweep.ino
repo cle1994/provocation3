@@ -36,7 +36,7 @@ void go_to(int new_pos) {
    for (pos = pos; pos != new_pos; pos = pos + incr) {
      myservo.write(pos);
      Serial.print("pos:");Serial.println(pos);
-     delay(10); 
+     delay(50); 
    }
 }
 
