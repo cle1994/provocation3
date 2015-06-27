@@ -12,9 +12,10 @@
 
 #define SERVO_PIN 9
 
-#define N 3 // the number of previous loudness values to maintain
+#define N 10 // the number of previous loudness values to maintain
 
 float loud_voltage = 2.7;
+float chatty_voltage = 1.2;
 float quiet_voltage = 2.6;
 bool is_happy = true; // flag for whether buddy is currently happy or sad
 unsigned long started_happy_at_time = 0; // record millis() when it started being happy
@@ -60,7 +61,20 @@ void loop() {
   Serial.print(", happy start t: "); Serial.print(started_happy_at_time);
   Serial.print(", dt: "); Serial.println(time_elapsed);
   
-  if (avg_volts > loud_voltage && is_happy
+  if (avg_volts > chatty_voltage && 
+      avg_volts < loud_voltage && is_happy) {
+     Serial.println(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+     Serial.println("   heard you talking, chatting back");
+     Serial.println(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+     play_happy_noises();
+     init_avg();
+  } else if (capacitive > 1000 && avg_volts < loud_voltage && is_happy) {
+     Serial.println(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+     Serial.println("   felt you petting, happy about it");
+     Serial.println(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+     play_happy_noises();
+     init_avg();
+  } else if (avg_volts > loud_voltage && is_happy
      && time_elapsed > be_happy_for_at_least ) {
      Serial.println("=======================================");
      Serial.println("   too loud! buddy is unhappy :-(  ");
