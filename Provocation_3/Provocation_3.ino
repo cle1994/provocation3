@@ -12,26 +12,47 @@
 
 #define SERVO_PIN 9
 
-#define N 10 // the number of previous loudness values to maintain
+// SETTINGS: NUMBERS YOU CAN TWEAK //////////////////////////////////////
 
-float loud_voltage = 2.7;
-float chatty_voltage = 1.2;
-float quiet_voltage = 2.6;
-bool is_happy = true; // flag for whether buddy is currently happy or sad
-unsigned long started_happy_at_time = 0; // record millis() when it started being happy
-unsigned long be_happy_for_at_least = 5000; // can't go to sad state until at least this
-                                  // much time has been spent in happy state
+// making N smaller will make it more responsive 
+#define N 3 // the number of previous loudness values to maintain
+
+float quiet_volts = 0.5; // this or lower means it's quiet
+float chatty_volts_min = 0.7; // between chatty_volts_min and chatty_volts_max
+float chatty_volts_max = 2.0; // means normal talking loudness
+float loud_volts = 2.7; // when it's this loud or above, it means the kid is upset
+
+float petting_level = 1500; // when the capacitive sensor reaches this threshold,
+                            // it means Buddy is getting petted
+
+unsigned long purr_limit = 15 * 1000; // only allowed to purr at most once every this often (ms)
+unsigned long cry_limit = 15 * 1000;  // only allowed to cry at most once every this often (ms)
+unsigned long chat_duration_min = 500; // the minimum amount of time that can count as being chatty
+
+// END OF SETTINGS //////////////////////////////////////////////////////
+
+// remembering internal state about whether to be purring or chatty or crying
+unsigned long last_purred = 0; // the time at which Buddy last purred
+unsigned long last_cried = 0;  // the time at which Buddy last cried
+unsigned long chat_duration = 0; // how long we have been in chatty levels
+
+unsigned long timestamp = 0; // the timestamp of the current time through the loop
+unsigned long prev_timestamp = 0; // the timestamp of the previous time through the loop
 
 // for calculating voltage
-const int sampleWindow = 500; // Sample window width in mS (50 mS = 20Hz)
+const int sampleWindow = 500; // Sample window width in mS
 unsigned int sample;
 double prev_volts[N];
 double avg_volts = 0;
 double volts = 0;
 
+// for playing sounds
 Wtv020sd16p soundCtrl(RESET_PIN, CLOCK_PIN, DATA_PIN, BUSY_PIN);
+
+// for sensing touch
 CapacitiveSensor capacitive_sensor = CapacitiveSensor(6,8); // 10M resistor between pins 6 & 8, pin 8 is sensor pin, add a wire and or foil
 
+// for curling up
 Servo myservo;
 int pos = 0; // servo position
 
@@ -43,56 +64,65 @@ void setup() {
    myservo.write(pos);
    go_to(180);
    init_avg();
-   started_happy_at_time = millis();
 }
 
 void loop() {
   volts = calculate_voltage();
   avg_volts = update_trailing_avg(volts);
-  float capacitive = capacitive_sensor.capacitiveSensor(30);
+  float touch = capacitive_sensor.capacitiveSensor(30);
+  bool being_pet = touch > petting_level;
+  prev_timestamp = timestamp;
+  timestamp = millis();
   
-  Serial.print("avg V: "); Serial.print(avg_volts);
-  Serial.print(", curr V: "); Serial.print(volts);
-  Serial.print(", capacitive: "); Serial.print(capacitive);
-  
-  unsigned long current_time = millis();
-  unsigned long time_elapsed = current_time - started_happy_at_time;
-  Serial.print(", t: "); Serial.print(current_time);
-  Serial.print(", happy start t: "); Serial.print(started_happy_at_time);
-  Serial.print(", dt: "); Serial.println(time_elapsed);
-  
-  if (avg_volts > chatty_voltage && 
-      avg_volts < loud_voltage && is_happy) {
-     Serial.println(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-     Serial.println("   heard you talking, chatting back");
-     Serial.println(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-     play_happy_noises();
-     init_avg();
-  } else if (capacitive > 1000 && avg_volts < loud_voltage && is_happy) {
-     Serial.println(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-     Serial.println("   felt you petting, happy about it");
-     Serial.println(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
-     play_happy_noises();
-     init_avg();
-  } else if (avg_volts > loud_voltage && is_happy
-     && time_elapsed > be_happy_for_at_least ) {
-     Serial.println("=======================================");
-     Serial.println("   too loud! buddy is unhappy :-(  ");
-     Serial.println("=======================================");
-     curl_up();
-     play_unhappy_noises();
-     is_happy = false;
-  } else if (avg_volts < quiet_voltage && !is_happy && capacitive > 1000) {
-  // } else if (avg_volts < quiet_voltage && !is_happy && capacitive > 2000) {
-     Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-     Serial.println("   things just got quiet & i'm being pet :-)  ");
-     Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-     uncurl();
-     play_happy_noises();
-     is_happy = true;
-     started_happy_at_time = millis();
-     init_avg();
+  Serial.println();
+  Serial.print(", avg V: "); Serial.print(avg_volts);
+  Serial.print(", timestamp: "); Serial.print(timestamp);
+  Serial.print(", last_cried: "); Serial.print(last_cried);
+  Serial.println();
+
+  // QUIET PURRING HAPPY TIME  
+  if (
+        avg_volts <= quiet_volts && // it's quiet
+        being_pet && // buddy is currently being pet
+        chat_duration < chat_duration_min && // the kid wasn't just chatting
+        time_since(last_purred) > purr_limit // Buddy didn't just purr
+  ) {
+    Serial.println("QUIET PURRING HAPPY TIME");
+    play_happy_noises(); // make purring/happy noises
+    last_purred = timestamp; // remember that this is the most recent purr time
+
+  // BRIEF PAUSE IN KID TALKING - CHAT BACK
+  } else if (
+        avg_volts <= quiet_volts && // it's quiet
+        chat_duration > chat_duration_min // the kid has been chatting for a little bit
+  ) {
+    Serial.println("CHAT BACK");
+    play_chatty_noises(chat_duration); // chat back
+    chat_duration = 0; // reset chat_duration
+
+  // KID IS TALKING - LISTEN/WAIT
+  } else if (
+        avg_volts >= chatty_volts_min && avg_volts <= chatty_volts_max // we are in chatty range
+  ) {
+    Serial.println("LISTEN/WAIT");
+    chat_duration += time_since(prev_timestamp); // update chat_duration
+
+  // LOUD UPSET UNHAPPY TIME
+  } else if (
+        avg_volts >= loud_volts && // it's loud
+        time_since(last_cried) > cry_limit // Buddy didn't just cry
+  ) {
+    Serial.println("LOUD UPSET UNHAPPY TIME");
+    play_unhappy_noises();
+    last_cried = timestamp;
   }
+}
+
+
+
+// HELPER FUNCTIONS ////////////////////////////////////
+unsigned long time_since(unsigned long t) {
+  return millis() - t; 
 }
 
 // SOUND CONTROL ///////////////////////////////////////
@@ -102,6 +132,11 @@ void play_unhappy_noises() {
 
 void play_happy_noises() {
   play_track_number(random(9,15));
+}
+
+void play_chatty_noises(unsigned long duration) {
+  // TODO actually play separate happy noises based on time length
+  play_happy_noises();
 }
 
 void play_track_number(int track) {
