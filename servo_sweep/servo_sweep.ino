@@ -13,15 +13,24 @@ void setup()
   Serial.begin(9600);
   myservo.attach(9);  // attaches the servo on pin 9 to the servo object 
   myservo.write(pos);
+  pinMode(13, OUTPUT);
 } 
 
 void loop() {
-  go_to(0);
-  delay(3000);
-  go_to(179);
-  delay(1000);
+  Serial.println("about to go to 0");
+  digitalWrite(13, LOW);
+  myservo.write(0);
+  delay(2000);
+ 
+
+  Serial.println("about to go to 170");
+  digitalWrite(13, HIGH);
+  myservo.write(170);
+  delay(5000);
+ 
 }
 
+/*
 void go_to(int new_pos) {
   Serial.print("pos:");Serial.println(pos);
   if (pos == new_pos) {
@@ -39,6 +48,7 @@ void go_to(int new_pos) {
      delay(50); 
    }
 }
+*/
 
 /* sweep example
 void loop() 

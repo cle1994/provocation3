@@ -17,9 +17,9 @@
 // making N smaller will make it more responsive 
 #define N 3 // the number of previous loudness values to maintain
 
-float quiet_volts = 0.5; // this or lower means it's quiet
-float chatty_volts_min = 0.7; // between chatty_volts_min and chatty_volts_max
-float chatty_volts_max = 2.0; // means normal talking loudness
+float quiet_volts = 1.75; // this or lower means it's quiet
+float chatty_volts_min = 1.75; // between chatty_volts_min and chatty_volts_max
+float chatty_volts_max = 2.5; // means normal talking loudness
 float loud_volts = 2.7; // when it's this loud or above, it means the kid is upset
 
 float petting_level = 1500; // when the capacitive sensor reaches this threshold,
@@ -28,6 +28,25 @@ float petting_level = 1500; // when the capacitive sensor reaches this threshold
 unsigned long purr_limit = 15 * 1000; // only allowed to purr at most once every this often (ms)
 unsigned long cry_limit = 15 * 1000;  // only allowed to cry at most once every this often (ms)
 unsigned long chat_duration_min = 500; // the minimum amount of time that can count as being chatty
+
+// how we organized the sound files on the SD card
+int sd_chat_start = 0;
+int sd_chat_end = 16;
+int sd_friendly_start = 17;
+int sd_friendly_end = 25;
+int sd_needs_attn_start = 26;
+int sd_needs_attn_end = 34;
+int sd_concern_start = 35;
+int sd_concern_end = 46;
+int sd_frustration_start = 47;
+int sd_frustration_end = 62;
+int sd_unhappy_start = 63;
+int sd_unhappy_end = 71;
+int sd_happy_start = 72;
+int sd_happy_end = 77;
+
+int sd_sample_length = 700; // a lot of the samples are about this long (ms)
+                            // except for the happy/unhappy noises
 
 // END OF SETTINGS //////////////////////////////////////////////////////
 
@@ -62,7 +81,7 @@ void setup() {
    soundCtrl.reset();
    myservo.attach(SERVO_PIN);
    myservo.write(pos);
-   go_to(180);
+   go_to(0);
    init_avg();
 }
 
@@ -88,6 +107,7 @@ void loop() {
         time_since(last_purred) > purr_limit // Buddy didn't just purr
   ) {
     Serial.println("QUIET PURRING HAPPY TIME");
+    uncurl();
     play_happy_noises(); // make purring/happy noises
     last_purred = timestamp; // remember that this is the most recent purr time
 
@@ -113,6 +133,7 @@ void loop() {
         time_since(last_cried) > cry_limit // Buddy didn't just cry
   ) {
     Serial.println("LOUD UPSET UNHAPPY TIME");
+    curl_up();
     play_unhappy_noises();
     last_cried = timestamp;
   }
@@ -127,22 +148,23 @@ unsigned long time_since(unsigned long t) {
 
 // SOUND CONTROL ///////////////////////////////////////
 void play_unhappy_noises() {
-  play_track_number(random(0,9));
+  play_track_number(random(sd_unhappy_start,sd_unhappy_end + 1));
+  delay(4000);
 }
 
 void play_happy_noises() {
-  play_track_number(random(9,15));
+  play_track_number(random(sd_happy_start,sd_happy_end + 1));
+  delay(4000);
 }
 
 void play_chatty_noises(unsigned long duration) {
-  // TODO actually play separate happy noises based on time length
-  play_happy_noises();
+  play_track_number(random(sd_chat_start, sd_frustration_end + 1));
+  delay(sd_sample_length);       
 }
 
 void play_track_number(int track) {
   Serial.print("Playing track number: ");Serial.println(track);
   soundCtrl.playVoice(track);
-  delay(4000);
 }
 
 // VOLTAGE & TRAILING AVERAGE CALCULATIONS //////////////////////////
@@ -193,10 +215,12 @@ double calculate_voltage() {
 
 // SERVO CONTROL /////////////////////////////////
 void curl_up() {
-  go_to(0);
+  //go_to(170);
+  myservo.write(170);
 }
 void uncurl() {
-  go_to(180); 
+  //go_to(0); 
+  myservo.write(0);
 }
 void go_to(int new_pos) {
   if (pos == new_pos) {
