@@ -30,20 +30,12 @@ unsigned long cry_limit = 15 * 1000;  // only allowed to cry at most once every 
 unsigned long chat_duration_min = 500; // the minimum amount of time that can count as being chatty
 
 // how we organized the sound files on the SD card
-int sd_chat_start = 0;
-int sd_chat_end = 16;
-int sd_friendly_start = 17;
-int sd_friendly_end = 25;
-int sd_needs_attn_start = 26;
-int sd_needs_attn_end = 34;
-int sd_concern_start = 35;
-int sd_concern_end = 46;
-int sd_frustration_start = 47;
-int sd_frustration_end = 62;
-int sd_unhappy_start = 63;
-int sd_unhappy_end = 71;
-int sd_happy_start = 72;
-int sd_happy_end = 77;
+int sd_chat_start = 1;
+int sd_chat_end = 23;
+int sd_unhappy_start = 24;
+int sd_unhappy_end = 54;
+int sd_happy_start = 1;
+int sd_happy_end = 23;
 
 int sd_sample_length = 700; // a lot of the samples are about this long (ms)
                             // except for the happy/unhappy noises
@@ -95,13 +87,12 @@ void loop() {
   
   Serial.println();
   Serial.print(", avg V: "); Serial.print(avg_volts);
-  Serial.print(", timestamp: "); Serial.print(timestamp);
-  Serial.print(", last_cried: "); Serial.print(last_cried);
+  Serial.print(", touch: "); Serial.print(touch);
   Serial.println();
 
   // QUIET PURRING HAPPY TIME  
   if (
-        avg_volts <= quiet_volts && // it's quiet
+        //avg_volts <= quiet_volts && // it's quiet
         being_pet && // buddy is currently being pet
         chat_duration < chat_duration_min && // the kid wasn't just chatting
         time_since(last_purred) > purr_limit // Buddy didn't just purr
@@ -134,6 +125,8 @@ void loop() {
   ) {
     Serial.println("LOUD UPSET UNHAPPY TIME");
     curl_up();
+    delay(500);
+    play_unhappy_noises();
     play_unhappy_noises();
     last_cried = timestamp;
   }
@@ -158,7 +151,7 @@ void play_happy_noises() {
 }
 
 void play_chatty_noises(unsigned long duration) {
-  play_track_number(random(sd_chat_start, sd_frustration_end + 1));
+  play_track_number(random(sd_chat_start, sd_chat_end + 1));
   delay(sd_sample_length);       
 }
 
@@ -216,11 +209,11 @@ double calculate_voltage() {
 // SERVO CONTROL /////////////////////////////////
 void curl_up() {
   //go_to(170);
-  myservo.write(170);
+  myservo.write(160);
 }
 void uncurl() {
   //go_to(0); 
-  myservo.write(0);
+  myservo.write(10);
 }
 void go_to(int new_pos) {
   if (pos == new_pos) {
