@@ -19,9 +19,8 @@ void setup()
 void loop() {
   Serial.println("about to go to 0");
   digitalWrite(13, LOW);
-  myservo.write(0);
+  myservo.write(10);
   delay(2000);
- 
 
   Serial.println("about to go to 170");
   digitalWrite(13, HIGH);
@@ -64,5 +63,5 @@ void loop()
     delay(15);                       // waits 15ms for the servo to reach the position 
   }
   delay(1000);
-}
-*/
+}*/
+
