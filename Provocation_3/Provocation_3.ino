@@ -94,7 +94,7 @@ void loop() {
   if (
         //avg_volts <= quiet_volts && // it's quiet
         being_pet && // buddy is currently being pet
-        chat_duration < chat_duration_min && // the kid wasn't just chatting
+        //chat_duration < chat_duration_min && // the kid wasn't just chatting
         time_since(last_purred) > purr_limit // Buddy didn't just purr
   ) {
     Serial.println("QUIET PURRING HAPPY TIME");
