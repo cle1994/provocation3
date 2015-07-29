@@ -141,8 +141,9 @@ unsigned long time_since(unsigned long t) {
 
 // SOUND CONTROL ///////////////////////////////////////
 void play_unhappy_noises() {
-  play_track_number(random(sd_unhappy_start,sd_unhappy_end + 1));
-  delay(4000);
+  int track = random(sd_unhappy_start, sd_unhappy_end + 1);
+  play_track_number(track);
+  delay(2000);
 }
 
 void play_happy_noises() {
