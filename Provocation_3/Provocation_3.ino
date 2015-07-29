@@ -17,15 +17,15 @@
 // making N smaller will make it more responsive 
 #define N 3 // the number of previous loudness values to maintain
 
-float quiet_volts = 1.75; // this or lower means it's quiet
-float chatty_volts_min = 1.75; // between chatty_volts_min and chatty_volts_max
+float quiet_volts = 1.5; // this or lower means it's quiet
+float chatty_volts_min = 1.5; // between chatty_volts_min and chatty_volts_max
 float chatty_volts_max = 2.5; // means normal talking loudness
 float loud_volts = 2.7; // when it's this loud or above, it means the kid is upset
 
 float petting_level = 1500; // when the capacitive sensor reaches this threshold,
                             // it means Buddy is getting petted
 
-unsigned long purr_limit = 15 * 1000; // only allowed to purr at most once every this often (ms)
+unsigned long purr_limit = 5 * 1000; // only allowed to purr at most once every this often (ms)
 unsigned long cry_limit = 15 * 1000;  // only allowed to cry at most once every this often (ms)
 unsigned long chat_duration_min = 500; // the minimum amount of time that can count as being chatty
 
